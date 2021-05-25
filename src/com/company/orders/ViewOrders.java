@@ -1,17 +1,20 @@
-package com.company;
+package com.company.orders;
 
-import com.company.db.OrderDAO;
-import com.company.utils.CustomDebitTableModel;
-import com.company.utils.Helpers;
+import com.company.dataBase.OrderDAO;
+import com.company.utilities.CustomDebitTableModel;
+import com.company.utilities.HeaderRenderer;
+import com.company.utilities.Helpers;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 
@@ -21,13 +24,14 @@ public class ViewOrders {
     private JTextArea textArea;
     private JTextField searchField;
     private Order highlightedOrder;
-    private static JTable receiptTable;
+    private static JTable table;
     private static DefaultTableModel model;
     private final Font font = new Font(Font.DIALOG, Font.BOLD, 20);
     public static JLabel nameHolder, debitHolder;
     private static ArrayList<Order> orders = new ArrayList<>();
     private JButton searchBtn = new JButton("بحث");
     private ActionListener searchClickListener = new Listener();
+    private final Color myColor = Color.RED;
 
     public ViewOrders() {
         nameHolder = new JLabel("");
@@ -40,15 +44,14 @@ public class ViewOrders {
 
     private JPanel prepareLeftScrollPane() {
         JPanel panel = new JPanel(new GridLayout(1, 1, 5, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         textArea = new JTextArea();
         textArea.setPreferredSize(new Dimension(300, 300));
         textArea.setEditable(false);
         textArea.setFont(new Font(Font.DIALOG, Font.BOLD, 13));
-        textArea.setSize(350, 300);
         textArea.setLineWrap(true);       // wrap line
         textArea.setWrapStyleWord(true);
         scrollPane = new JScrollPane(textArea);
-        scrollPane.setSize(new Dimension(350, 300));
         panel.add(scrollPane);
         return panel;
     }
@@ -57,7 +60,6 @@ public class ViewOrders {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                OrderDAO orderDAO = new OrderDAO();
                 if (!searchField.getText().trim().isEmpty()) {
                     Order order = new OrderDAO().find(Integer.parseInt(searchField.getText().trim()));
                     System.out.println(order.getTotalDebit());
@@ -65,7 +67,7 @@ public class ViewOrders {
                     highlightedOrder = order;
                     return;
                 }
-                Helpers.prepareOrderDAO(orderDAO.find(Integer.parseInt(searchField.getText())), textArea);
+                Helpers.prepareOrderDAO(OrderDAO.find(Integer.parseInt(searchField.getText())), textArea);
             } catch (Exception ex) {
                 textArea.setText("");
                 JOptionPane.showMessageDialog(null,
@@ -114,14 +116,15 @@ public class ViewOrders {
                 Helpers.print(Helpers.printOrder(highlightedOrder));
             }
         });
-        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 20));
-        panel.add(print);
+        JPanel panel = new JPanel(new GridLayout(1, 2, 20, 10));
         panel.add(new JLabel(""));
+        panel.add(print);
+
         return panel;
     }
 
     private JPanel prepareLeftPanel() {
-        leftPanel = new JPanel(new BorderLayout(5, 20));
+        leftPanel = new JPanel(new BorderLayout(30, 20));
         leftPanel.add(prepareSearchField(), BorderLayout.NORTH);
         leftPanel.add(prepareLeftScrollPane(), BorderLayout.CENTER);
         leftPanel.add(printPanel(), BorderLayout.SOUTH);
@@ -134,41 +137,45 @@ public class ViewOrders {
     }
 
     private JScrollPane prepareTable() {
-        receiptTable = new JTable(prepareModel());
-        receiptTable.setFont(font);
-        JTableHeader header = receiptTable.getTableHeader();
+        table = new JTable(prepareModel());
+        table.setFont(font);
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new HeaderRenderer(table));
         header.setFont(font);
-        receiptTable.setRowHeight(30);
+        table.setRowHeight(30);
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        receiptTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        receiptTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-        receiptTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        int lastIndex = receiptTable.getRowCount() - 1;
-        Rectangle rect = receiptTable.getCellRect(lastIndex, 0, false);
-        receiptTable.scrollRectToVisible(rect);
-        receiptTable.changeSelection(lastIndex, 0, false, false);
-        receiptTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        receiptTable.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        receiptTable.setFillsViewportHeight(true);
-        receiptTable.getSelectionModel().addListSelectionListener(e -> {
+        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+        int lastIndex = table.getRowCount() - 1;
+        Rectangle rect = table.getCellRect(lastIndex, 0, false);
+        table.scrollRectToVisible(rect);
+        table.changeSelection(lastIndex, 0, false, false);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        table.setFillsViewportHeight(true);
+        table.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) {
-                int orderId = Integer.parseInt(receiptTable.getModel().getValueAt(receiptTable.getSelectedRow(), 1).toString());
+                int orderId = Integer.parseInt(table.getModel().getValueAt(table.getSelectedRow(), 1).toString());
                 searchField.setText(orderId + "");
                 searchBtn.setEnabled(true);
                 try {
-                    highlightedOrder = new OrderDAO().find(orderId);
+                    new OrderDAO();
+                    highlightedOrder =  OrderDAO.find(orderId);
                     Helpers.prepareOrderDAO(highlightedOrder, textArea);
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }
+                System.out.println("wel");
             }
+
         });
-        return new JScrollPane(receiptTable);
+        return new JScrollPane(table);
     }
 
     public static void renderReceipt(ArrayList<Order> orderdList) {
-        receiptTable.updateUI();
+        table.updateUI();
         model.setRowCount(0);
         orders = orderdList;
         int count = 1;
@@ -177,7 +184,7 @@ public class ViewOrders {
             count++;
         }
 
-        receiptTable.revalidate();
+        table.revalidate();
     }
 
 
@@ -200,6 +207,9 @@ public class ViewOrders {
         nameHolder.setText("");
         debitHolder.setText("");
         JPanel mainPanel = new JPanel(new GridLayout(1, 3, 50, 10));
+        mainPanel.setBorder(BorderFactory.createTitledBorder(null, "الفواتير",
+                TitledBorder.CENTER,
+                TitledBorder.CENTER, font, myColor));
         leftPanel = this.prepareLeftPanel();
         rightPanel = this.prepareRightPanel();
         mainPanel.add(leftPanel, 1, 0);

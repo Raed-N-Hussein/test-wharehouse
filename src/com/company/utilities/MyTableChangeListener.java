@@ -1,60 +1,46 @@
-package com.company.utils;
+package com.company.utilities;
 
 import com.company.Product;
+import com.company.inventory.TableModel;
+
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import static java.util.Objects.isNull;
 
-public class SalesTableChangeListener implements TableModelListener {
+public class MyTableChangeListener extends DefaultTableCellRenderer implements TableModelListener {
     protected JTable tbl;
     protected ArrayList<Product> products;
     protected Callable callback;
 
-    public SalesTableChangeListener(JTable tbl, ArrayList<Product> products, Callable callback) {
+    public MyTableChangeListener(JTable tbl, ArrayList<Product> products) {
         this.tbl = tbl;
         this.products = products;
-        this.callback = callback;
+//        this.callback = callback;
+
     }
 
     @Override
     public void tableChanged(TableModelEvent e) {
-        try {
-            if (e.getColumn() < 0) return;
-            switch (e.getColumn()) {
-                case 3:
-                    Object value=tbl.getValueAt(e.getFirstRow(),e.getColumn());
-                    if (isNull(value)){
-                        return;
-                    }
-                    int newPrice = (Integer) value;
-                    products.get(e.getFirstRow()).updateQuantityBasedOnPrice(newPrice);
-                    break;
-                case 4:
-                    int newQuantity;
-                    try {
-                        newQuantity = (Integer) tbl.getValueAt(e.getFirstRow(), e.getColumn());
-                        if (newQuantity > 0) {
-                            products.get(e.getFirstRow()).setQuantity(newQuantity);
-                            break;
-                        }
-                        throw new Exception("invalid quantity");
-                    } catch (Exception exp) {
-                        products.remove(e.getFirstRow());
-                    }
-                    break;
-                case 5:
-                    Product product = products.get(e.getFirstRow());
-                    product.setCumulative(!product.getCumulative());
-                    break;
+        int columnOne = e.getColumn();
+        int rowOne = e.getFirstRow();
+
+        tbl.getColumnModel().getColumn(columnOne).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                 table.getValueAt(row, column).toString();
+
+                return c;
             }
-            this.callback.call();
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
+        });
     }
+
 }
 

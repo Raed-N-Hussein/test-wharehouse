@@ -1,7 +1,10 @@
-package com.company.db;
-import java.sql.*;
+package com.company.dataBase;
 
-public class OrderProduct extends DatabaseConnection {
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class OrderProduct {
     public OrderProduct() {
         createOrderProductTable();
     }
@@ -11,9 +14,8 @@ public class OrderProduct extends DatabaseConnection {
                 "product_id int NOT NULL," +
                 "quantity REAL NOT NULL);";
         try {
-            getConnect();
-            Statement stm = getConnect().createStatement();
-            stm.execute(sql);
+            PreparedStatement stm = Connect.getConnect().prepareStatement(sql);
+            stm.execute();
         } catch (SQLException se) {
             System.out.println(se.getMessage());
         }
@@ -22,8 +24,7 @@ public class OrderProduct extends DatabaseConnection {
     public void insertDataOrderProduct(int orderId, int productId,float quantity) {
         String sql = "INSERT INTO  orders_products (order_id, product_id, quantity) VALUES (?, ?, ?)";
         try {
-            getConnect();
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
             pstm.setInt(1, orderId);
             pstm.setInt(2, productId);
             pstm.setFloat(3, quantity);

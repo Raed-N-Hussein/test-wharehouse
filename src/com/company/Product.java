@@ -9,14 +9,6 @@ public class Product {
     private int singleQuantity;
     private int remainQuantity;
 
-    public String getExpireDate() {
-        return expireDate;
-    }
-
-    public void setExpireDate(String expireDate) {
-        this.expireDate = expireDate;
-    }
-
     private int quantity;
     private boolean isCumulative;
     private String barcode;
@@ -24,6 +16,58 @@ public class Product {
 
     public Product() {
 
+    }
+
+    public Product(int id, String name, int cumulativePrice, int singlePrice, int quantity, String barcode) {
+        this.id = id;
+        this.name = name;
+        this.singlePrice = singlePrice;
+        this.cumulativePrice = cumulativePrice;
+        this.quantity = quantity;
+        this.barcode = barcode;
+    }
+
+    public Product(String name, int cumulativePrice, int singlePrice) {
+        this.name = name;
+        this.cumulativePrice = cumulativePrice;
+        this.singlePrice = singlePrice;
+        this.quantity = 1;
+        this.isCumulative = false;
+    }
+
+    public Product(String name, String expireDate,int cumulativePrice, int singlePrice, int cumulativeQuantity,
+                   int singleQuantity, int remainQuantity, String barcode){
+        this.name = name;
+        this.expireDate = expireDate;
+        this.cumulativePrice = cumulativePrice;
+        this.singlePrice = singlePrice;
+        this.quantity = 1;
+        this.cumulativeQuantity = cumulativeQuantity;
+        this.singleQuantity = singleQuantity;
+        this.remainQuantity = remainQuantity;
+        this.barcode = barcode;
+    }
+
+    public Product(int id,String name, String expireDate,int cumulativePrice, int singlePrice, int cumulativeQuantity,
+                   int singleQuantity, int remainQuantity, String barcode){
+        this.id = id;
+        this.name = name;
+        this.expireDate = expireDate;
+        this.cumulativePrice = cumulativePrice;
+        this.singlePrice = singlePrice;
+        this.quantity = 1;
+        this.cumulativeQuantity = cumulativeQuantity;
+        this.singleQuantity = singleQuantity;
+        this.remainQuantity = remainQuantity;
+        this.barcode = barcode;
+    }
+
+    public String getExpireDate() {
+        return expireDate;
+    }
+
+    public void setExpireDate(String expireDate) {
+        this.expireDate = expireDate;
     }
 
     public int getCumulativeQuantity() {
@@ -50,25 +94,6 @@ public class Product {
         this.remainQuantity = remainQuantity;
     }
 
-    public Product(String name, int cumulativePrice, int singlePrice) {
-        this.name = name;
-        this.cumulativePrice = cumulativePrice;
-        this.singlePrice = singlePrice;
-        this.quantity = 1;
-        this.isCumulative = false;
-    }
-
-    public Product(String name, String expireDate,int cumulativePrice, int singlePrice, int cumulativeQuantity,
-                   int singleQuantity, int remainQuantity, String barcode){
-        this.name = name;
-        this.expireDate = expireDate;
-        this.cumulativePrice = cumulativePrice;
-        this.singlePrice = singlePrice;
-        this.cumulativeQuantity = cumulativeQuantity;
-        this.singleQuantity = singleQuantity;
-        this.remainQuantity = remainQuantity;
-        this.barcode = barcode;
-    }
     public int getId() {
         return id;
     }
@@ -127,6 +152,6 @@ public class Product {
 
     public int getPrice() {
         // if isCumulative true return cumulative * quantity .. else return singlePrice * quantity
-        return isCumulative ? cumulativePrice * quantity : singlePrice * quantity;
+        return isCumulative ? this.getCumulativePrice() * quantity : getSinglePrice() * quantity;
     }
 }

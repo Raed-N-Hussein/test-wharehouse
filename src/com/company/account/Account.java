@@ -1,4 +1,4 @@
-package com.company;
+package com.company.account;
 
 public class Account {
     private String name;

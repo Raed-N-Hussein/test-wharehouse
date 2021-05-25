@@ -1,14 +1,13 @@
-package com.company.utils;
+package com.company.utilities;
 
-import com.company.Account;
-import com.company.Order;
+import com.company.account.Account;
+import com.company.orders.Order;
 import com.company.Product;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.print.PageFormat;
 import java.awt.print.Paper;
-import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
@@ -39,7 +38,7 @@ public class Helpers {
 
     public static void prepareOrderDAO(Order order, JTextArea textArea) {
         final String line = "-----------------------------------------\n";
-        String billHeader = "" + "[ اسواق وبراد الزاب \\ بإدارة مظهر عبد الغني]" + "" + "\n";
+        String billHeader = "";
         billHeader += "---------------" + "فاتوره دفع" + "----------------" + "\n";
         billHeader += order.getDate() + "\t" + ":تاريخ" + "\n";
         billHeader += order.getId() + "\t" + ":رقم الفاتوره" + "\n";
@@ -52,9 +51,7 @@ public class Helpers {
         billFooter += order.getTotalDebit() + "\t" + ":الديون" + "\n";
         billFooter += String.format("الزبون: %s \t\n", order.getClientName());
         billFooter += line;
-        billFooter += "شكرا لتسوقكم معنا\n";
-        billFooter += line;
-        billFooter += "07827626713 \\ M&G برمجة \n";
+
         StringBuilder output = new StringBuilder(billHeader + s + line);
         for (Product product : order.getItems()) {
             output.append(formatProduct(product));
@@ -116,20 +113,20 @@ public class Helpers {
 
     public static String printAccount(Account account){
         final String line = "-----------------------------------------\n";
-        String billHeader = "" + "[ اسواق وبراد الزاب \\ بإدارة مظهر عبد الغني]" + "" + "\n";
+        String billHeader = "";
         billHeader += "---------------" + "وصل ديون" + "----------------" + "\n";
         String s = account.getName() + "\t" + "الاسم" + "\n";
         s+= account.getID() + "\t" + "رقم الحساب" + "\n";
         s+= account.getTotalDebit() + "\t" + "مبلغ الدين" + "\n";
         billHeader+=s;
         billHeader+=line;
-        billHeader += "07827626713 \\ M&G برمجة \n";
+
         return billHeader;
     }
 
     public static String printOrder(Order order) {
         final String line = "-----------------------------------------\n";
-        String billHeader = "" + "[ اسواق وبراد الزاب \\ بإدارة مظهر عبد الغني]" + "" + "\n";
+        String billHeader = "";
         billHeader += "---------------" + "فاتوره دفع" + "----------------" + "\n";
         billHeader += order.getDate() + "\t" + ":تاريخ" + "\n";
         billHeader += order.getId() + "\t" + ":رقم الفاتوره" + "\n";
@@ -142,9 +139,8 @@ public class Helpers {
         billFooter += order.getTotalDebit() + "\t" + ":الديون" + "\n";
         billFooter += String.format("الزبون: %s \t\n", order.getClientName());
         billFooter += line;
-        billFooter += "شكرا لتسوقكم معنا\n";
-        billFooter += line;
-        billFooter += "07827626713 \\ M&G برمجة \n";
+
+
         StringBuilder output = new StringBuilder(billHeader + s + line);
         for (Product product : order.getItems()) {
             output.append(formatProduct(product));
@@ -154,13 +150,13 @@ public class Helpers {
     }
 
     private static String formatProduct(Product product) {
-        return String.format("%.6s\t %2s %20.15s\n", (int) product.getPrice(), formatQty(product.getQuantity()), product.getName());
+        return String.format("%.6s\t %2s %20.15s\n", (int) product.getPrice(), formatQty((float) product.getQuantity()), product.getName());
     }
 
     private static String formatQty(Float qty) {
-        String[] parts = qty.toString().split(".");
+        String[] parts = qty.toString().split("\\.");
         if (parts.length > 1) {
-            if (parts[1] == "0") {
+            if (parts[1].equals("0")) {
                 return parts[0];
             }
         }

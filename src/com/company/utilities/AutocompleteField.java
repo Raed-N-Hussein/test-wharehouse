@@ -1,6 +1,7 @@
-package com.company.utils;
-import com.company.Main;
-import com.company.SalesView;
+package com.company.utilities;
+
+import com.company.sales.SalesView;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;

@@ -1,18 +1,21 @@
-package com.company.db;
+package com.company.dataBase;
 
-import com.company.Order;
+import com.company.orders.Order;
 import com.company.Product;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
-public class OrderDAO extends DatabaseConnection {
+public class OrderDAO {
     public OrderDAO() {
         createTableOrder();
     }
 
     public void createTableOrder() {
-        String sql = "CREATE TABLE IF NOT EXISTS orders (id integer PRIMARY KEY, " +
+        String sql = "create table if not exists orders (id integer PRIMARY KEY, " +
                 "total_price real, " +
                 "paid_amount real, " +
                 "remain_amount real, " +
@@ -20,38 +23,44 @@ public class OrderDAO extends DatabaseConnection {
                 "created_at text NOT NULL, " +
                 "client_name text NOT NULL);";
         try {
-            getConnect();
-            Statement stm = getConnect().createStatement();
-            stm.execute(sql);
+            PreparedStatement stm = Connect.getConnect().prepareStatement(sql);
+            stm.execute();
+
         } catch (SQLException se) {
-            System.out.println(se.getMessage());
+            System.out.println(se.getMessage() + " error..");
         }
     }
 
-    public void insertData(int totalPrice, int paidAmount, int remainAmount, int totalDebit, String dateTime, String clientName, ArrayList<Product> products) {
-        String sql = "INSERT INTO  orders (total_price, paid_amount, remain_amount, total_debit, created_at, client_name) VALUES (?, ?, ?, ?, ?, ?)";
+    public static void insertData(Order order) {
+        String sql = "INSERT INTO  orders (total_price," +
+                " paid_amount, " +
+                "remain_amount, " +
+                "total_debit, " +
+                "created_at," +
+                " client_name)" +
+                " VALUES (?, ?, ?, ?, ?, ?)";
         try {
-            getConnect();
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
-            pstm.setInt(1, totalPrice);
-            pstm.setInt(2, paidAmount);
-            pstm.setInt(3, remainAmount);
-            pstm.setInt(4, totalDebit);
-            pstm.setString(5, dateTime);
-            pstm.setString(6, clientName);
+
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
+            pstm.setInt(1, order.getTotal());
+            pstm.setInt(2, order.getPaid());
+            pstm.setInt(3, order.getRemain());
+            pstm.setInt(4, order.getTotalDebit());
+            pstm.setString(5, order.getDate());
+            pstm.setString(6, order.getClientName());
             pstm.executeUpdate();
-            this.insertDataToOrderProductTable(products);
+            insertDataToOrderProductTable(order.getItems());
 
         } catch (SQLException se) {
             se.printStackTrace();
         }
     }
 
-    public int getOrderId() {
+    public static int getOrderId() {
         String sql = "select MAX(id) FROM orders;";
         try {
-            getConnect();
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
+
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
             ResultSet rst = pstm.executeQuery();
             if (rst.next()) {
                 return rst.getInt(1);
@@ -62,17 +71,17 @@ public class OrderDAO extends DatabaseConnection {
         return 0;
     }
 
-    public void insertDataToOrderProductTable(ArrayList<Product> products) {
+    public static void insertDataToOrderProductTable(ArrayList<Product> products) {
         OrderProduct OrderProduct = new OrderProduct();
         for (Product prod : products) {
-            OrderProduct.insertDataOrderProduct(getOrderId(), prod.getId(),prod.getQuantity());
+            OrderProduct.insertDataOrderProduct(getOrderId(), prod.getId(), prod.getQuantity());
         }
     }
 
-    public Order find(int orderId) throws Exception {
+    public static Order find(int orderId) throws Exception {
         Order order = new Order();
         String sql = "SELECT * FROM orders WHERE id = ?";
-        PreparedStatement pstm = getConnect().prepareStatement(sql);
+        PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
         pstm.setInt(1, orderId);
         ResultSet rst = pstm.executeQuery();
         if (rst.next()) {
@@ -92,25 +101,26 @@ public class OrderDAO extends DatabaseConnection {
 
     }
 
-    public ArrayList<Product> getOrderProducts(int orderId) {
+    public static ArrayList<Product> getOrderProducts(int orderId) {
         ArrayList<Product> results = new ArrayList<>();
-        String sql = "SELECT id, name, cumulative_price, single_price, quantity, barcode " +
-                "FROM orders_products" +
-                " LEFT JOIN products ON " +
-                "orders_products.product_id = products.id " +
+        String sql = "SELECT id, name, " +
+                "cumulativePrice, " +
+                "singlePrice," +
+                "quantity, barcode " +
+                "FROM product" +
+                " LEFT JOIN orders_products ON " +
+                "orders_products.product_id = product.id " +
                 "WHERE orders_products.order_id = ?;";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try {
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
             pstm.setInt(1, orderId);
+
             ResultSet rst = pstm.executeQuery();
             while (rst.next()) {
-                Product prod = new Product(rst.getInt("id"),
-                        rst.getString("name"),
-                        rst.getInt("cumulative_price"),
-                        rst.getInt("single_price"),
-                        rst.getInt("quantity"),
-                        rst.getString("barcode"));
-                prod.setQuantity(rst.getFloat("quantity"));
-                results.add(prod);
+                Product product = new Product(rst.getInt("id"), rst.getString("name"),
+                        rst.getInt("cumulativePrice"), rst.getInt("singlePrice"),
+                        rst.getInt("quantity"), rst.getString("barcode"));
+                results.add(product);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -122,7 +132,7 @@ public class OrderDAO extends DatabaseConnection {
     public ArrayList<Order> getOrdersToClient(Object object) {
         ArrayList<Order> results = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE client_name = ? OR id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setObject(1, object);
             pstm.setObject(2, object);
             ResultSet result = pstm.executeQuery();

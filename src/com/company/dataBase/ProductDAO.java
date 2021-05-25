@@ -5,7 +5,11 @@ import com.company.Product;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class DataBase {
+public class ProductDAO {
+
+    public ProductDAO() {
+        create();
+    }
 
 
     public void create() {
@@ -14,9 +18,9 @@ public class DataBase {
                 "expireDate text not null," +
                 "cumulativePrice int," +
                 "singlePrice int," +
-                "cumulativeQuantity," +
-                "singleQuantity," +
-                "remainQuantity," +
+                "cumulativeQuantity int," +
+                "singleQuantity int," +
+                "remainQuantity int," +
                 "barcode text not null)";
         try (PreparedStatement preparedStatement = Connect.getConnect().prepareStatement(sql)) {
             preparedStatement.execute();
@@ -28,7 +32,14 @@ public class DataBase {
     }
 
     public void insert(Product product) {
-        String sql = "insert into product(name, expireDate,cumulativePrice, singlePrice, cumulativeQuantity, singleQuantity, remainQuantity, barcode)values(?,?,?,?,?,?,?,?)";
+        String sql = "insert into product(name, " +
+                "expireDate," +
+                "cumulativePrice, " +
+                "singlePrice," +
+                " cumulativeQuantity," +
+                " singleQuantity, " +
+                "remainQuantity, " +
+                "barcode)values(?,?,?,?,?,?,?,?)";
         try (PreparedStatement preparedStatement = Connect.getConnect().prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setString(2, product.getExpireDate());
@@ -42,6 +53,7 @@ public class DataBase {
             System.out.println("insert");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+
         }
     }
 
@@ -51,7 +63,7 @@ public class DataBase {
         try (PreparedStatement preparedStatement = Connect.getConnect().prepareStatement(sql)) {
             ResultSet rst = preparedStatement.executeQuery();
             while (rst.next()) {
-                Product product = new Product(rst.getString(2), rst.getString(3),
+                Product product = new Product(rst.getInt(1),rst.getString(2), rst.getString(3),
                         rst.getInt(4), rst.getInt(5), rst.getInt(6),
                         rst.getInt(7), rst.getInt(8), rst.getString(9));
 
@@ -82,19 +94,19 @@ public class DataBase {
 
 
     public static void updateProduct(Product product) {
-        String sql = "UPDATE product SET name = ? , " +
-                "expireDate = ?" +
-                "cumulativePrice =?" +
-                "singlePrice = ?" +
-                "cumulativeQuantity = ?" +
-                "singleQuantity = ?" +
+        String sql = "UPDATE product SET name = ?, " +
+                "expireDate = ?," +
+                "cumulativePrice = ?," +
+                "singlePrice = ?," +
+                "cumulativeQuantity = ?," +
+                "singleQuantity = ?," +
                 "remainQuantity = ?" +
                 "WHERE barcode = ?";
 
-        try (Connection conn = Connect.getConnect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = Connect.getConnect().prepareStatement(sql)) {
 
             // set the corresponding param
+
             pstmt.setString(1, product.getName());
             pstmt.setString(2, product.getExpireDate());
             pstmt.setInt(3, product.getCumulativePrice());
@@ -107,6 +119,7 @@ public class DataBase {
             // update
             pstmt.executeUpdate();
         } catch (SQLException e) {
+            System.out.println("ohhhhh");
             System.out.println(e.getMessage());
         }
     }

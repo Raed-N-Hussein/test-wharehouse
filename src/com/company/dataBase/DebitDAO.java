@@ -1,13 +1,14 @@
-package com.company.db;
+package com.company.dataBase;
 
-import com.company.Account;
+import com.company.account.Account;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-public class DebitDAO extends DatabaseConnection {
+public class DebitDAO {
     public DebitDAO() {
         createTableDebits();
     }
@@ -18,9 +19,9 @@ public class DebitDAO extends DatabaseConnection {
                 "total_amount real, " +
                 "date_time text NOT NULL);";
         try {
-            getConnect();
-            Statement stm = getConnect().createStatement();
-            stm.execute(sql);
+
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
+            pstm.execute();
         } catch (SQLException se) {
             System.out.println(se.getMessage());
         }
@@ -29,7 +30,7 @@ public class DebitDAO extends DatabaseConnection {
     public boolean checkName(String name) {
         String sql = "SELECT id FROM debits WHERE name=?";
         try {
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
             pstm.setString(1, name);
             ResultSet rst = pstm.executeQuery();
             if (rst.next()) {
@@ -44,11 +45,11 @@ public class DebitDAO extends DatabaseConnection {
     public void insertData(String name, double totalAmount, String datTime) {
         String sql = "INSERT INTO  debits (name, total_amount, date_time) VALUES (?, ?, ?)";
         try {
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
+            PreparedStatement pstm = Connect.getConnect().prepareStatement(sql);
             pstm.setString(1, name);
             pstm.setDouble(2, totalAmount);
             pstm.setString(3, datTime);
-            pstm.executeUpdate();
+            pstm.execute();
 
         } catch (SQLException se) {
             se.printStackTrace();
@@ -57,8 +58,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public int getDebitId() {
         String sql = "select MAX(id) FROM debits;";
-        try {
-            PreparedStatement pstm = getConnect().prepareStatement(sql);
+        try(PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             ResultSet rst = pstm.executeQuery();
             if (rst.next()) {
                 return rst.getInt(1);
@@ -73,7 +73,7 @@ public class DebitDAO extends DatabaseConnection {
     public Account find(Object object) {
         Account account = new Account();
         String sql = "SELECT * FROM debits WHERE id = ? OR name = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setObject(1, object);
             pstm.setObject(2, object);
             ResultSet rst = pstm.executeQuery();
@@ -91,7 +91,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public void updateAccount(int debitId, double totalAmount, String dateTime) {
         String sql = "UPDATE debits SET total_amount = ?, date_time = ? WHERE id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setDouble(1, totalAmount);
             pstm.setString(2, dateTime);
             pstm.setInt(3, debitId);
@@ -103,7 +103,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public void updateAccountName(int debitId,String name) {
         String sql = "UPDATE debits SET name = ? WHERE id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setString(1, name);
             pstm.setInt(2, debitId);
             pstm.executeUpdate();
@@ -115,8 +115,8 @@ public class DebitDAO extends DatabaseConnection {
     public ArrayList<Account> getDebits() {
         ArrayList<Account> results = new ArrayList<>();
         String sql = "SELECT * FROM debits";
-        try (Statement stm = getConnect().createStatement()) {
-            ResultSet result = stm.executeQuery(sql);
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
+            ResultSet result = pstm.executeQuery();
             while (result.next()) {
                 Account account = new Account(result.getString("name"),
                         result.getInt("total_amount"),
@@ -132,7 +132,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public int returnTotalAmount(Object object) {
         String sql = "SELECT total_amount FROM debits WHERE name = ? OR id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setObject(1, object);
             pstm.setObject(2, object);
             ResultSet rst = pstm.executeQuery();
@@ -147,7 +147,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public void updateAccountByNameOrId(Object object, int remain, String dateTime) {
         String sql = "UPDATE debits SET total_amount = ?, date_time = ? WHERE name = ? OR id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setDouble(1, returnTotalAmount(object) + remain);
             pstm.setString(2, dateTime);
             pstm.setObject(3, object);
@@ -160,7 +160,7 @@ public class DebitDAO extends DatabaseConnection {
 
     public boolean checkAccount(Object object) {
         String sql = "SELECT * FROM debits WHERE name = ? OR id = ?";
-        try (PreparedStatement pstm = getConnect().prepareStatement(sql)) {
+        try (PreparedStatement pstm = Connect.getConnect().prepareStatement(sql)) {
             pstm.setObject(1, object);
             pstm.setObject(2, object);
             ResultSet rst = pstm.executeQuery();

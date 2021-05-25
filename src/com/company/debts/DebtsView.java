@@ -1,30 +1,37 @@
-package com.company;
+package com.company.debts;
 
-import com.company.db.DebitDAO;
-import com.company.db.OrderDAO;
-import com.company.utils.CustomDebitTableModel;
-import com.company.utils.Helpers;
+import com.company.PrimaryView;
+import com.company.account.Account;
+import com.company.dataBase.DebitDAO;
+import com.company.dataBase.OrderDAO;
+import com.company.dataBase.DebitDAO;
+import com.company.dataBase.OrderDAO;
+import com.company.orders.Order;
+import com.company.orders.ViewOrders;
+import com.company.utilities.*;
+import com.company.utilities.CustomDebitTableModel;
+import com.company.utilities.Helpers;
+
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.PreparedStatement;
 import java.text.NumberFormat;
-import java.time.chrono.HijrahEra;
 import java.util.ArrayList;
 import java.util.Locale;
-import javax.swing.table.JTableHeader;
 
 /*****
  *
  *  Class of DebitsView
  */
-public class DebitsView {
+public class DebtsView {
     private JTextField nameField, amountField;
     private JButton updateNameBtn, receiptBtn, discountAmountDebitBtn, addAmountDebitBtn;
     private DebitDAO debitDAO;
-    private JTable accountsTable;
+    private JTable table;
     private DefaultTableModel model;
     public static ArrayList<Account> accounts = new ArrayList<>();
     private static JLabel nameLabel, idLabel, totalDebitLabel, dateTimeLabel;
@@ -32,11 +39,12 @@ public class DebitsView {
     private JLabel statsLabel;
     private final Font font = new Font(Font.DIALOG, Font.BOLD, 16);
     private static ArrayList<Order> orders;
+    private final Color myColor = Color.RED;
 
     /***
      *  constructor of DebitsView
      */
-    public DebitsView() {
+    public DebtsView() {
         debitDAO = new DebitDAO();
         accounts = debitDAO.getDebits();
         account = new Account();
@@ -50,7 +58,10 @@ public class DebitsView {
 
     private JPanel customerInformation() {
         JPanel panel = new JPanel(new GridLayout(4, 3, 5, 10));
-        panel.setBorder(BorderFactory.createTitledBorder("معلومات الزبون"));
+
+        panel.setBorder(BorderFactory.createTitledBorder(null, "الزبون",
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.CENTER, font, myColor));
         Font font = new Font(Font.DIALOG, Font.BOLD, 16);
         panel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         updateNameBtn = new JButton("تعديل الاسم");
@@ -65,6 +76,7 @@ public class DebitsView {
 
         receiptBtn = PrimaryView.receiptBtn;
         receiptBtn.setFont(font);
+
         receiptBtn.setEnabled(false);
 
         panel.add(receiptBtn);
@@ -101,8 +113,9 @@ public class DebitsView {
      */
     private JPanel addCustomerPanel() {
         JPanel panel = new JPanel(new GridLayout(3, 3, 10, 40));
-        Font font = new Font(Font.DIALOG, Font.BOLD, 16);
-        panel.setBorder(BorderFactory.createTitledBorder("إضافة زبائن الى قائمة الديون"));
+        panel.setBorder(BorderFactory.createTitledBorder(null, "إضافة زبائن الى قائمة الديون",
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.CENTER, font, myColor));
         panel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         nameField = new JTextField(30);
         nameField.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -135,7 +148,9 @@ public class DebitsView {
 
     private JPanel stats() {
         JPanel panel = new JPanel(new GridLayout(2, 3, 10, 15));
-        panel.setBorder(BorderFactory.createTitledBorder("إجمالي الديون"));
+        panel.setBorder(BorderFactory.createTitledBorder(null, "إجمالي الديون",
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.CENTER, font, myColor));
         JLabel debits = new JLabel("مجموع الديون : ");
         JLabel currency = new JLabel("د.ع");
         Font font = new Font(Font.DIALOG, Font.BOLD, 20);
@@ -200,18 +215,18 @@ public class DebitsView {
         amountField.setText("");
         loseCellFocus();
         refreshTable();
-        int lastIndex = accountsTable.getRowCount() - 1;
-        Rectangle rect = accountsTable.getCellRect(lastIndex, 0, false);
-        accountsTable.scrollRectToVisible(rect);
-        accountsTable.changeSelection(lastIndex, 0, false, false);
+        int lastIndex = table.getRowCount() - 1;
+        Rectangle rect = table.getCellRect(lastIndex, 0, false);
+        table.scrollRectToVisible(rect);
+        table.changeSelection(lastIndex, 0, false, false);
         populateDetails(lastIndex + 1);
         Helpers.setBarcodeFocus(nameField);
     }
 
     private void automateScrollToExitCustomer(String barcode) {
         int specificIndex = returnProductIndex(barcode);
-        accountsTable.scrollRectToVisible(accountsTable.getCellRect(specificIndex, 2, true));
-        accountsTable.changeSelection(specificIndex, 2, false, false);
+        table.scrollRectToVisible(table.getCellRect(specificIndex, 2, true));
+        table.changeSelection(specificIndex, 2, false, false);
         populateDetails(specificIndex + 1);
     }
 
@@ -273,7 +288,7 @@ public class DebitsView {
 
     /***
      *
-     * @return the right panel that's contain the table or accountsTable
+     * @return the right panel that's contain the table or table
      */
     private JPanel rightPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 30));
@@ -337,26 +352,27 @@ public class DebitsView {
      * @return scrollPane contain the table component
      */
     private JScrollPane prepareTable() {
-        accountsTable = new JTable(prepareModel());
-        accountsTable.setFont(font);
-        JTableHeader header = accountsTable.getTableHeader();
+        table = new JTable(prepareModel());
+        table.setFont(font);
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new HeaderRenderer(table));
         header.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
-        accountsTable.setRowHeight(30);
+        table.setRowHeight(30);
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        accountsTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        accountsTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-        accountsTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        accountsTable.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-        accountsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        accountsTable.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        accountsTable.setFillsViewportHeight(true);
+        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        table.setFillsViewportHeight(true);
 
         renderAccounts(accounts);
 
-        accountsTable.getSelectionModel().addListSelectionListener(e -> {
+        table.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) {
-                int index = (Integer) accountsTable.getModel().getValueAt(accountsTable.getSelectedRow(), 2);
+                int index = (Integer) table.getModel().getValueAt(table.getSelectedRow(), 2);
                 updateNameBtn.setEnabled(true);
                 receiptBtn.setEnabled(true);
                 addAmountDebitBtn.setEnabled(true);
@@ -367,17 +383,17 @@ public class DebitsView {
 
         });
 
-        accountsTable.addMouseListener(new MouseAdapter() {
+        table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                accountsTable.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                table.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                accountsTable.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                table.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
         });
-        JScrollPane scrollPane = new JScrollPane(accountsTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         JScrollBar bar = scrollPane.getVerticalScrollBar();
         bar.setPreferredSize(new Dimension(18, 0));
@@ -389,7 +405,7 @@ public class DebitsView {
      * to remove selection from row in the table
      */
     public void loseCellFocus() {
-        accountsTable.getSelectionModel().clearSelection();
+        table.getSelectionModel().clearSelection();
 
     }
 
@@ -414,7 +430,11 @@ public class DebitsView {
      * @return main panel that's contain all the component of debits
      */
     public JPanel process() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(10, 20));
+        panel.setBorder(BorderFactory.createTitledBorder(null, "سجل الديون",
+                TitledBorder.CENTER,
+                TitledBorder.CENTER, font, myColor));
+        panel.add(new JLabel(), BorderLayout.NORTH);
         panel.add(centerPanel(), BorderLayout.CENTER);
         refreshTable();
         return panel;
@@ -426,11 +446,11 @@ public class DebitsView {
      */
     private void populateDetails(int accountId) {
         account = debitDAO.find(accountId);
-        this.accounts = debitDAO.getDebits();
-        this.nameLabel.setText(account.getName());
-        this.idLabel.setText(account.getID() + "");
-        this.totalDebitLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(account.getTotalDebit()));
-        this.dateTimeLabel.setText(account.getCreationDate());
+        accounts = debitDAO.getDebits();
+        nameLabel.setText(account.getName());
+        idLabel.setText(account.getID() + "");
+        totalDebitLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(account.getTotalDebit()));
+        dateTimeLabel.setText(account.getCreationDate());
         statsLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(totalDebits()));
 
     }
@@ -446,11 +466,11 @@ public class DebitsView {
         if (strValue != null && account.getName() != null && account.getCreationDate() != null) {
             try {
                 debitDAO.updateAccountName(Integer.parseInt(idLabel.getText()), strValue);
-                accountsTable.getModel().setValueAt(strValue, accountsTable.getSelectedRow(), 1);
+                table.getModel().setValueAt(strValue, table.getSelectedRow(), 1);
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
-                accountsTable.updateUI();
+                table.updateUI();
                 populateDetails(Integer.parseInt(idLabel.getText()));
             }
         }
@@ -474,7 +494,7 @@ public class DebitsView {
                         "تحذير", JOptionPane.WARNING_MESSAGE);
                 addAmount();
             } finally {
-                accountsTable.updateUI();
+                table.updateUI();
                 populateDetails(Integer.parseInt(idLabel.getText()));
             }
             printReceipt(account.getID());
@@ -508,7 +528,7 @@ public class DebitsView {
                         "تحذير", JOptionPane.WARNING_MESSAGE);
                 discountAmount();
             } finally {
-                accountsTable.updateUI();
+                table.updateUI();
                 populateDetails(Integer.parseInt(idLabel.getText()));
             }
             printReceipt(account.getID());
@@ -526,8 +546,8 @@ public class DebitsView {
         try {
             debitDAO.updateAccount(id, totalAmount, dateTime);
             account = debitDAO.find(id);
-            this.totalDebitLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(account.getTotalDebit()));
-            accountsTable.getModel().setValueAt(account.getTotalDebit(), accountsTable.getSelectedRow(), 3);
+            totalDebitLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(account.getTotalDebit()));
+            table.getModel().setValueAt(account.getTotalDebit(), table.getSelectedRow(), 3);
             this.statsLabel.setText(NumberFormat.getNumberInstance(Locale.US).format(totalDebits()));
         } catch (Exception e) {
             //TODO
@@ -541,11 +561,11 @@ public class DebitsView {
     private ArrayList<Account> searchAccount(String keyword) {
         ArrayList<Account> searchResults = new ArrayList<>();
         if (keyword.isEmpty()) {
-            return this.accounts;
+            return accounts;
         }
         for (Account account : accounts) {
 
-            if (account.getName().contains(keyword)) {
+            if (account.getName().contains(keyword) || String.valueOf(account.getID()).contains(keyword)) {
                 searchResults.add(account);
 
             }
