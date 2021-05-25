@@ -1,7 +1,8 @@
 package com.company.inventory;
 
 import com.company.Product;
-import com.company.dataBase.DataBase;
+import com.company.dataBase.ProductDAO;
+import com.company.utilities.HeaderRenderer;
 import com.company.utilities.Utility;
 
 import javax.swing.*;
@@ -30,7 +31,7 @@ public class Inventory {
             "السعر بالمفرد", "الكمية بالجملة", "الكمية بالمفرد", "الكمية المتبقية", "الباركود"};
 
     public Inventory() {
-        products = DataBase.getProducts();
+        products = ProductDAO.getProducts();
     }
 
     public JPanel getMainPanel() {
@@ -38,7 +39,7 @@ public class Inventory {
         panel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         Font myFont = new Font("SansSerif", Font.PLAIN, 20);
         Color myColor = Color.RED;
-        panel.setBorder(BorderFactory.createTitledBorder(null, "واجهة المبيعات",
+        panel.setBorder(BorderFactory.createTitledBorder(null, "مخزن الادوية",
                 TitledBorder.DEFAULT_JUSTIFICATION,
                 TitledBorder.CENTER, myFont, myColor));
 
@@ -53,6 +54,8 @@ public class Inventory {
 
         table = new JTable(model);
         JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new HeaderRenderer(table));
+
 
         DefaultTableCellRenderer centerRender = new DefaultTableCellRenderer();
         table.setRowHeight(25);
@@ -89,7 +92,7 @@ public class Inventory {
     }
 
     public void addNewProduct(Product product) {
-        new DataBase().insert(product);
+        new ProductDAO().insert(product);
     }
 
     private JPanel footerPanel() {
@@ -144,9 +147,7 @@ public class Inventory {
         expireDateField.addActionListener(listener);
 
         clearBtn = new Utility().button("تفريغ الحقول", font, background, foreground, dimension);
-        clearBtn.addActionListener(e -> {
-            this.clearFields();
-        });
+        clearBtn.addActionListener(e -> {clearFields(); });
 
         addBtn = new Utility().button("اضافة منتج", font, background, foreground, dimension);
         addBtn.addActionListener(listener);
@@ -215,7 +216,7 @@ public class Inventory {
 
             try {
                 String barcode = barcodeField.getText().trim();
-                if (DataBase.checkBarcode(barcode)) {
+                if (ProductDAO.checkBarcode(barcode)) {
                     JOptionPane.showMessageDialog(null, Utility.label("هذا المنتج موجود سابقا..\n قم بإدخال منتج جديد", font),
                             "تنبيه", JOptionPane.WARNING_MESSAGE);
                     automateMoveSelectToExistProduct(barcode);
@@ -241,7 +242,7 @@ public class Inventory {
 //                    model.removeRow();
                     updateTable();
                     barcodeField.requestFocusInWindow();
-                    products = DataBase.getProducts();
+                    products = ProductDAO.getProducts();
                     renderTable(products);
                     automateMoveSelectLastProduct();
 
